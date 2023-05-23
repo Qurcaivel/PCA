@@ -40,29 +40,16 @@ const char* const week[] = {
     "Saturday",
 };
 
-// New interrupt handlers
+// Global var state
 
-void interrupt new_time_int(...);
-void interrupt new_alarm_int(...);
+int time_repeats;
 
-// Old interrupt handlers
+// Interrupt handlers
 
 void interrupt(*old_time_int)(...);
-void interrupt(*old_alarm_int)(...);
+void interrupt new_time_int(...);   // implemented under set_delay()
 
 // Datetime interaction functions
-
-void set_datetime(struct datetime* dt);
-void get_datetime(struct datetime* dt);
-
-// User interface procedures
-
-void print_datetime(struct datetime* dt);
-
-int main()
-{
-    return 0;
-}
 
 void set_datetime(struct datetime* dt)
 {
@@ -104,6 +91,8 @@ void get_datetime(struct datetime* dt)
     }
 }
 
+// I/O datetime functions
+
 void print_datetime(struct datetime* dt)
 {
     printf("%s, %s %02u, 20%02u %02u:%02u:%02u\n", 
@@ -114,3 +103,53 @@ void print_datetime(struct datetime* dt)
            dt->hours, dt->mins, dt->secs);
 }
 
+// todo: improve it (and test it)
+void input_datetime(struct datetime* dt)
+{
+    printf("Input date <wday, month, mday, year>: ");
+    scanf("%u%u%u%u", &dt->wday, &dt->month, &dt->mday, &dt->year);
+
+    printf("Input time <hours, mins, secs>: ");
+    scanf("%u%u%u", &dt->hours, &dt->mins, &dt->secs);
+}
+
+// Clock control functions
+
+void set_delay(int ms)
+{
+    _disable();
+
+    old_time_int = getvect(0x70);
+    setvect(0x70, new_time_int);
+
+    _enable();
+
+    outp(0xA1, inp(0xA1) & 0xFE); // unmask request signal line
+    outp(0x70, 0xB);
+    outp(0x71, inp(0x71) | 0x40); // period interrupt
+
+    time_repeats = 0;
+    while(time_repeats <= ms){}   // wait expirancy | todo: не до пус ти мо!!! в тз написано, без зависаний, так и работаем, братва, вызывай хандл в инте
+    setvect(0x70, old_time_int);
+}
+
+void interrupt new_time_int(...)
+{
+    time_repeats++;
+    outp(0x70, 0x0C); // select memory in CMOS
+    inp(0x71);
+    
+    outp(0x20, 0x20); // send End Of Interrupt
+    outp(0xA0, 0x20);
+}
+
+// Entry point function
+
+int main()
+{
+    printf("Wow");
+    set_delay(2000);
+    printf("Owo");
+
+    return 0;
+}
