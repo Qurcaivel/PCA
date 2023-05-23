@@ -4,8 +4,8 @@
 
 // Representation marco
 
-#define DECIMAL8(BCD) ((BCD / 16 * 10) + (BCD % 16))
-#define BCD8(DECIMAL) ((DECIMAL / 10 * 16) + (DECIMAL % 10))
+#define to_decimal(bcd) ((bcd / 16 * 10) + (bcd % 16))
+#define to_bcd(decimal) ((decimal / 10 * 16) + (decimal % 10))
 
 // Data structures
 
@@ -31,13 +31,13 @@ const char* const month[] = {
 };
 
 const char* const week[] = {
-    "Saturday",
     "Sunday",
     "Monday",
     "Tuesday",
     "Wednesday",
     "Thursday",
     "Friday",
+    "Saturday",
 };
 
 // New interrupt handlers
@@ -61,23 +61,6 @@ void print_datetime(struct datetime* dt);
 
 int main()
 {
-    struct datetime dt;
-    struct datetime rt;
-    
-    dt.wday = 1;
-    dt.mday = 2;
-    dt.month = 3;
-    dt.year = 4;
-    dt.secs = 5;
-    dt.mins = 6;
-    dt.hours = 7;
-    
-    set_datetime(&dt);
-    print_datetime(&dt);
-    
-    get_datetime(&rt);
-    print_datetime(&rt);
-    
     return 0;
 }
 
@@ -100,7 +83,7 @@ void set_datetime(struct datetime* dt)
     
     for(i = 0; i < 7; i++){
         outp(0x70, datetime_registers[i]);
-        outp(0x71, BCD8(output[i]));
+        outp(0x71, to_bcd(output[i]));
     }
     
     outp(0x70, 0xB);
@@ -117,7 +100,7 @@ void get_datetime(struct datetime* dt)
     for(i = 0; i < 7; i++){
         outp(0x70, datetime_registers[i]);
         input[i] = inp(0x71);
-        input[i] = DECIMAL8(input[i]);
+        input[i] = to_decimal(input[i]);
     }
 }
 
