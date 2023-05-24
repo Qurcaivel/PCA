@@ -29,12 +29,12 @@ void to_bin(unsigned char state, char* bin)
     char tmp;
 
     for(i = 7; i >= 0; i--) 
-	{
-		tmp = state % 2;
-		state /= 2;
-		bin[i] = tmp + '0';
-	}
-	bin[8] = '\0';
+    {
+        tmp = state % 2;
+        state /= 2;
+        bin[i] = tmp + '0';
+    }
+    bin[8] = '\0';
 }
 
 void print_state()
@@ -86,15 +86,15 @@ void set_frequency(int input)
 
 void play_sound()
 {
-    for (int i = 0; i < 9; i++)
+    for(int i = 0; i < 9; i++)
     {
-		outp(0x61, inp(0x61) | 0x03); //   turn on speaker
+        outp(0x61, inp(0x61) | 0x03); //   turn on speaker
 		
-		set_frequency(sounds[i].frequency); // set setup for 2nd channel of timer
-		delay(sounds[i].delay);
+        set_frequency(sounds[i].frequency); // set setup for 2nd channel of timer
+        delay(sounds[i].delay);
 		
-		outp(0x61, inp(0x61) & 0xFC); // turn off speaker
-	}
+        outp(0x61, inp(0x61) & 0xFC); // turn off speaker
+    }
 }
 
 int main()
@@ -104,7 +104,7 @@ int main()
     
     while(1)
     {
-		printf("\nChoose operation:\n"
+        printf("\nChoose operation:\n"
                "1 - play sound\n"
                "2 - print state\n"
                "3 - exit\n\n> ");
@@ -120,10 +120,10 @@ int main()
             case 2:
                 print_state();
                 break;
-                
+
             case 3:
                 return 0;
-                
+            
             default:
                 printf("Error: unknown operation\n");
                 break;
