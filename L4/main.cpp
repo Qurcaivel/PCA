@@ -1,6 +1,7 @@
 #include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <conio.h>
 
 // Representation marco
 
@@ -120,17 +121,17 @@ void input_datetime(struct datetime* dt)
 void set_delay(unsigned int ms)
 {
     _disable();
+    
+    time_running = 1;
+    time_repeats = 0;
+    exec_repeats = ms;
 
     old_time_int = getvect(0x70);
     setvect(0x70, new_time_int);
 
-    outp(0xA1, inp(0xA1) & 0xFE); // unmask request signal line
+    outp(0xA1, inp(0xA0) & 0xFE); // unmask request signal line
     outp(0x70, 0xB);
     outp(0x71, inp(0x71) | 0x40); // period interrupt
-
-    time_running = 1;
-    time_repeats = 0;
-    exec_repeats = ms;
 
     _enable();
 }
@@ -139,11 +140,12 @@ void reset_delay()
 {
     _disable();
 
-    outp(0xA1, inp(0xA1) | 0x01); // mask irq
+    time_running = 0;
+    
+    setvect(0x70, old_time_int);
+    
     outp(0x70, 0xB);
     outp(0x71, inp(0x71) & 0xBF); // period interrupt disabe
-
-    setvect(0x70, old_time_int);
 
     _enable();
 }
@@ -158,7 +160,6 @@ void interrupt new_time_int(...)
     if(time_repeats == exec_repeats)
     {
         reset_delay();
-        time_running = 0;
         puts("Delay has been expired\n");
     }
 
@@ -171,36 +172,38 @@ void interrupt new_time_int(...)
 int main()
 {
     unsigned int ms;
-    int option;
     struct datetime dt;
 
     printf("Menu:\n\t1 - print datetime\n\t2 - input datetime\n\t3 - start delay\n\t4 - exit program\n\n");
 
     for(;;)
     {
-        scanf("%d", &option);
-
-        switch(option)
+        switch(getch())
         {
-            case 1:
+            case '1':
                 get_datetime(&dt);
                 print_datetime(&dt);
                 break;
 
-            case 2:
+            case '2':
                 input_datetime(&dt);
                 set_datetime(&dt);
                 break;
 
-            case 3:
+            case '3':
                 if(time_running){
                     printf("Error: timer in use\n");
                 }
-                scanf("%u", &ms);
-                set_delay(ms);
+                else {
+                    printf("Enter ms: ");
+                    fflush(stdin);
+                    scanf("%d", &ms);
+                    set_delay(ms);
+                }
+
                 break;
                 
-            case 4:
+            case '4':
                 if(time_running){
                     printf("Exit: reset running delay\n");
                     reset_delay();
