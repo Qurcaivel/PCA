@@ -1,15 +1,14 @@
+#include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <dos.h>
 
-struct Sound
+struct sound
 {
     unsigned int frequency;
     unsigned int delay;
 };
 
-struct Sound sounds[9];
+struct sound sounds[9];
 
 void set_sounds()
 {
@@ -26,8 +25,10 @@ void set_sounds()
 
 void to_bin(unsigned char state, char* bin)
 {
+    int i;
     char tmp;
-    for (int i = 7; i >= 0; i--) 
+
+    for(i = 7; i >= 0; i--) 
 	{
 		tmp = state % 2;
 		state /= 2;
@@ -39,9 +40,8 @@ void to_bin(unsigned char state, char* bin)
 void print_state()
 {
     unsigned char state;
-    char* bin = (char*)malloc(9 * sizeof(char));
+    char bin[9];
     
-    // channel 0 state
     outp(0x43, 0xE2); // 11 1 0 001 0
                       //    | |   | channel 0 
                       //    | | fix counter state
@@ -50,16 +50,18 @@ void print_state()
     to_bin(state, bin);
     printf("channel 0 state: %s\n", bin);
     
-    // channel 1 state
     outp(0x43, 0xE4); // 11 1 0 010 0
-                      //         | channel 1
+                      //    | |  | channel 1
+                      //    | | fix counter state
+                      //    | do not fix the counter value 
     state = inp(0x41);
     to_bin(state, bin);
     printf("channel 1 state: %s\n", bin);
     
-    // channel 2 state
     outp(0x43, 0xE8); // 11 1 0 100 0
-                      //        | channel 2 
+                      //    | | | channel 2
+                      //    | | fix counter state
+                      //    | do not fix the counter value 
     state = inp(0x42);
     to_bin(state, bin);
     printf("channel 2 state: %s\n", bin);
@@ -71,13 +73,10 @@ void set_frequency(int input)
     long freq;
     
     outp(0x43, 0xB6); // 10 11 011 0
-                      // 0  1   2  3
-                      //
-                      // 0 - selecting the 2nd channel
-                      // 1 - recording the counter value (starting from the lowest)
-                      // 2 - 3rd operating mode
-                      // 3 - binary count
-                      
+                      // |  |   |  | binary count
+                      // |  |   | 3rd operating mode
+                      // |  | recording the counter value (from lowest)
+                      // | selecting the 2nd channel
     freq = base / input;
     outp(0x42, freq % 256);
     
@@ -105,12 +104,12 @@ int main()
     
     while(1)
     {
-		printf("Choose operation:\n"
+		printf("\nChoose operation:\n"
                "1 - play sound\n"
                "2 - print state\n"
-               "3 - exit\n\n");
+               "3 - exit\n\n> ");
 		
-        while(!scanf("%d", &op)) {}
+        while(!scanf("%d", &op)){}
         
         switch(op)
         {
@@ -126,9 +125,8 @@ int main()
                 return 0;
                 
             default:
-                printf("invalid operation\n");
+                printf("Error: unknown operation\n");
                 break;
         }
     }
-    
 }
