@@ -54,7 +54,7 @@ int main()
 
     while(is_run)
     {
-	    if(write(0xED) || write(random(5))){
+        if(write(0xED) || write(random(5))){
             break;
         }
         
