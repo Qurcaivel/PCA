@@ -14,11 +14,11 @@ void interrupt newint09(...)
     unsigned char scancode = inp(0x60);
     
     if(scancode != 0xFA){
-	printf("0x%x\n", scancode);
+        printf("0x%x\n", scancode);
     }
 
     if(scancode == 0x01){
-	is_run = 0;
+        is_run = 0;
     }
 
     (*oldint09)();
@@ -49,15 +49,12 @@ int main()
     
     oldint09 = getvect(0x09);
     setvect(0x09, newint09);
-    
-    state = 0;
+
     is_run = 1;
 
     while(is_run)
     {
-        state = (state == 4) ? 0 : 4;
-        
-	    if(write(0xED) || write(state)){
+	    if(write(0xED) || write(random(5))){
             break;
         }
         
